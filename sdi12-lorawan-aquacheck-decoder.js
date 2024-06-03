@@ -62,38 +62,48 @@ function fport5(bytes) {
 }
 
 function fport100(bytes) {
-    var datas_sum = {};
+    var decode = {};
     for (var j = 0; j < bytes.length; j++) {
         var datas = String.fromCharCode(bytes[j]);
         if (j == '0')
-            datas_sum.datas_sum = datas;
+            decode.datas_sum = datas;
         else
-            datas_sum.datas_sum += datas;
+            decode.datas_sum += datas;
     }
 
-    return datas_sum;
+    return decode;
 }
 
 function periodicUplink(bytes) {
     var decode = {};
-    var first = 0;
+    var buffer = ""; // Initialize a buffer to accumulate characters
+    var commandIndex = 1; // Initialize a counter for command groups
+
     decode.EXTI_Trigger = (bytes[0] & 0x80) ? "TRUE" : "FALSE";
     decode.BatV = ((bytes[0] << 8 | bytes[1]) & 0x7FFF) / 1000;
     decode.Payver = bytes[2];
-    for (var i = 3; i < bytes.length; i++) {
-        var data = String.fromCharCode(bytes[i]);
+    decode.SensorAddress = String.fromCharCode(bytes[3]);
+    for (var i = 4; i < bytes.length; i++) {
         if (bytes[i] >= 0xF0) {
             i = i + 1;
         }
-        else if (((bytes[i] == 0x0D) || (bytes[i] == 0x0A)) || (bytes[i] >= 0x20) && (bytes[i] <= 0x7E)) {
-            if (first === 0) {
-                decode.data_sum = data;
-                first = 1;
-            }
-            else {
-                decode.data_sum += data;
+
+        if (((bytes[i] == 0x0D) || (bytes[i] == 0x0A)) || (bytes[i] >= 0x20 && bytes[i] <= 0x7E)) {
+            var current_character = String.fromCharCode(bytes[i]);
+            if (current_character === ' ') {
+                if (buffer !== "") {
+                    decode["D" + commandIndex] = buffer.slice(1); // Remove the leading '+' and set the data
+                    commandIndex++;
+                }
+                buffer = ""; // Reset the buffer for the next data point
+            } else {
+                buffer += current_character; // Accumulate characters into the buffer
             }
         }
+    }
+    // Store the last data group if the buffer is not empty
+    if (buffer !== "") {
+        decode["D" + commandIndex] = buffer.slice(1);
     }
     return decode;
 }
