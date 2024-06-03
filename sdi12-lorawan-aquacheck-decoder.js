@@ -4,6 +4,27 @@ function decodeUplink(input) {
     };
 }
 
+function createPayloadString(dataBytes) {
+    var payloadString = '';
+    for (var i = 0; i < dataBytes.length; i++) {
+        if (dataBytes[i] >= 0x20 && dataBytes[i] <= 0x7E) {
+            payloadString += String.fromCharCode(dataBytes[i]);
+        }
+    }
+    return payloadString
+}
+
+function createSegments(segments, decode) {
+    segments.forEach((segment, index) => {
+        if (index < 6) {
+            decode["Moisture" + (index + 1)] = segment.trim();
+        } else {
+            decode["Temperature" + (index - 5)] = segment.trim();
+        }
+    });
+    return decode;
+}
+
 function fport5(bytes) {
     var freq_band;
     var sub_band;
@@ -78,32 +99,17 @@ function periodicUplink(bytes) {
     var decode = {};
     var payloadString = "";
 
-    // Extract initial fields
     decode.EXTI_Trigger = (bytes[0] & 0x80) ? "TRUE" : "FALSE";
     decode.BatV = ((bytes[0] << 8 | bytes[1]) & 0x7FFF) / 1000;
     decode.Payver = bytes[2];
     decode.SensorAddress = String.fromCharCode(bytes[5]);
 
-    // Process the rest of the bytes from index 4 onwards
-    for (var i = 7; i < bytes.length; i++) {
-        if (bytes[i] >= 0x20 && bytes[i] <= 0x7E) {
-            payloadString += String.fromCharCode(bytes[i]);
-        }
-    }
+    dataBytes = bytes.slice(7);
 
-    // Split the payload string into segments based on the presence of address+
+    payloadString = createPayloadString(dataBytes);
+
     var segments = payloadString.split(/[\+\-]/);
-
-    // Assign each segment to a D key
-    segments.forEach((segment, index) => {
-        if (index < 6) {
-            decode["Moisture" + (index + 1)] = segment.trim();
-        } else {
-            decode["Temperature" + (index - 5)] = segment.trim();
-        }
-    });
-
-    return decode;
+    return createSegments(segments, decode);
 }
 
 function Decode(fPort, bytes) {
