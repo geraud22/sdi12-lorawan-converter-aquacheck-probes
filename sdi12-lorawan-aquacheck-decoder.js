@@ -1,6 +1,6 @@
 function decodeUplink(input) {
     return {
-        data: Decode(input.fPort, input.bytes, input.variables)
+        data: Decode(input.fPort, input.bytes)
     };
 }
 
@@ -95,6 +95,7 @@ function periodicUplink(bytes) {
             }
         }
     }
+    return decode;
 }
 
 function Decode(fPort, bytes) {
