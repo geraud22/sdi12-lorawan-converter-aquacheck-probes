@@ -76,35 +76,33 @@ function fport100(bytes) {
 
 function periodicUplink(bytes) {
     var decode = {};
-    var buffer = ""; // Initialize a buffer to accumulate characters
-    var commandIndex = 1; // Initialize a counter for command groups
+    var payloadString = "";
 
+    // Extract initial fields
     decode.EXTI_Trigger = (bytes[0] & 0x80) ? "TRUE" : "FALSE";
     decode.BatV = ((bytes[0] << 8 | bytes[1]) & 0x7FFF) / 1000;
     decode.Payver = bytes[2];
-    decode.SensorAddress = String.fromCharCode(bytes[3]);
-    for (var i = 4; i < bytes.length; i++) {
-        if (bytes[i] >= 0xF0) {
-            i = i + 1;
-        }
+    decode.SensorAddress = String.fromCharCode(bytes[5]);
 
-        if (((bytes[i] == 0x0D) || (bytes[i] == 0x0A)) || (bytes[i] >= 0x20 && bytes[i] <= 0x7E)) {
-            var current_character = String.fromCharCode(bytes[i]);
-            if (current_character === ' ') {
-                if (buffer !== "") {
-                    decode["D" + commandIndex] = buffer.slice(1); // Remove the leading '+' and set the data
-                    commandIndex++;
-                }
-                buffer = ""; // Reset the buffer for the next data point
-            } else {
-                buffer += current_character; // Accumulate characters into the buffer
-            }
+    // Process the rest of the bytes from index 4 onwards
+    for (var i = 7; i < bytes.length; i++) {
+        if (bytes[i] >= 0x20 && bytes[i] <= 0x7E) {
+            payloadString += String.fromCharCode(bytes[i]);
         }
     }
-    // Store the last data group if the buffer is not empty
-    if (buffer !== "") {
-        decode["D" + commandIndex] = buffer.slice(1);
-    }
+
+    // Split the payload string into segments based on the presence of address+
+    var segments = payloadString.split(/[\+\-]/);
+
+    // Assign each segment to a D key
+    segments.forEach((segment, index) => {
+        if (index < 6) {
+            decode["Moisture" + (index + 1)] = segment.trim();
+        } else {
+            decode["Temperature" + (index - 5)] = segment.trim();
+        }
+    });
+
     return decode;
 }
 
