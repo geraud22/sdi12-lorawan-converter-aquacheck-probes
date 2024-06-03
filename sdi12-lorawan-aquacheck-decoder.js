@@ -17,9 +17,9 @@ function createPayloadString(dataBytes) {
 function createSegments(segments, decode) {
     segments.forEach((segment, index) => {
         if (index < 6) {
-            decode["Moisture" + (index + 1)] = segment.trim();
+            decode["Moisture" + (index + 1)] = parseInt(segment.trim());
         } else {
-            decode["Temperature" + (index - 5)] = segment.trim();
+            decode["Temperature" + (index - 5)] = parseInt(segment.trim());
         }
     });
     return decode;
