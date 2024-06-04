@@ -10,9 +10,9 @@ class Decoder {
 
     generate_sensor_data_points() {
         let sensorDataString;
-        for (var i = 0; i < this.dataBytes.length; i++) {
-            if (this.dataBytes[i] >= 0x20 && this.dataBytes[i] <= 0x7E) {
-                sensorDataString += String.fromCharCode(this.dataBytes[i]);
+        for (var i = 0; i < this.sensorDataBytes.length; i++) {
+            if (this.sensorDataBytes[i] >= 0x20 && this.sensorDataBytes[i] <= 0x7E) {
+                sensorDataString += String.fromCharCode(this.sensorDataBytes[i]);
             }
         }
         this.sensorDataPoints = sensorDataString.split(/(?=[\+\-])/);
@@ -98,7 +98,7 @@ class Decoder {
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
         this.sensorDataBytes = this.bytes.slice(7);
-        this.sensorDataPoints = this.generate_sensor_data_points();
+        this.generate_sensor_data_points();
         this._append_moisture_and_temperature_data();
     }
 
