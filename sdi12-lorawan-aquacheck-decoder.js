@@ -8,33 +8,23 @@ class Decoder {
         this.create_decoded_object();
     }
 
-    generate_sensor_data_points() {
-        let sensorDataString;
-        for (var i = 0; i < this.sensorDataBytes.length; i++) {
-            if (this.sensorDataBytes[i] >= 0x20 && this.sensorDataBytes[i] <= 0x7E) {
-                sensorDataString += String.fromCharCode(this.sensorDataBytes[i]);
-            }
+    create_decoded_object() {
+        if (this.fPort == 5) {
+            this.fport5_object();
         }
-        this.sensorDataPoints = sensorDataString.split(/(?=[\+\-])/);
-    }
-
-    _append_moisture_and_temperature_data() {
-        this.sensorDataPoints.forEach((dataPoint, index) => {
-            if (index < 6) {
-                this.dataObject["Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
-            } else {
-                this.dataObject["Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
-            }
-        });
+        else if (this.fPort == 100) {
+            this.fport100_object();
+        }
+        else {
+            this.fportX_object();
+        }
     }
 
     fport5_object() {
         var freq_band;
         var sub_band;
         var sensor;
-
         if (this.bytes[0] == 0x17) sensor = "SDI12-LB";
-
         var firm_ver = (this.bytes[1] & 0x0f) + '.' + (this.bytes[2] >> 4 & 0x0f) + '.' + (this.bytes[2] & 0x0f);
 
         if (this.bytes[3] == 0x01)
@@ -74,7 +64,6 @@ class Decoder {
             sub_band = bytes[4];
 
         var bat = (this.bytes[5] << 8 | this.bytes[6]) / 1000;
-
         this.dataObject.SENSOR_MODEL = sensor;
         this.dataObject.FIRMWARE_VERSION = firm_ver;
         this.dataObject.FREQUENCY_BAND = freq_band;
@@ -99,19 +88,27 @@ class Decoder {
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
         this.sensorDataBytes = this.bytes.slice(7);
         this.generate_sensor_data_points();
-        this._append_moisture_and_temperature_data();
+        this.append_moisture_and_temperature_data();
+    }
+    
+    generate_sensor_data_points() {
+        let sensorDataString;
+        for (var i = 0; i < this.sensorDataBytes.length; i++) {
+            if (this.sensorDataBytes[i] >= 0x20 && this.sensorDataBytes[i] <= 0x7E) {
+                sensorDataString += String.fromCharCode(this.sensorDataBytes[i]);
+            }
+        }
+        this.sensorDataPoints = sensorDataString.split(/(?=[\+\-])/);
     }
 
-    create_decoded_object() {
-        if (this.fPort == 5) {
-            this.fport5_object();
-        }
-        else if (this.fPort == 100) {
-            this.fport100_object();
-        }
-        else {
-            this.fportX_object();
-        }
+    append_moisture_and_temperature_data() {
+        this.sensorDataPoints.forEach((dataPoint, index) => {
+            if (index < 6) {
+                this.dataObject["Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
+            } else {
+                this.dataObject["Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
+            }
+        });
     }
 }
 
@@ -126,12 +123,10 @@ function encodeDownlink(input) {
     const hexString = input.data;
     const byteLength = hexString.length / 2;
     const bytes = new Uint8Array(byteLength);
-
     for (let i = 0; i < byteLength; i++) {
         const hexPair = hexString.substr(i * 2, 2);
         bytes[i] = parseInt(hexPair, 16);
     }
-
     return {
         bytes: bytes
     };
