@@ -1,18 +1,13 @@
 class Decoder {
     constructor(fPort, bytes) {
-        this.fPort = fPort;
         this.bytes = bytes;
         this.sensorDataBytes = [];
         this.sensorDataPoints = [];
         this.dataObject = {};
-        this.create_decoded_object();
-    }
-
-    create_decoded_object() {
-        if (this.fPort == 5) {
+        if (fPort == 5) {
             this.fport5_object();
         }
-        else if (this.fPort == 100) {
+        else if (fPort == 100) {
             this.fport100_object();
         }
         else {
