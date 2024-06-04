@@ -1,25 +1,4 @@
-function encodeDownlink(input) {
-    const hexString = input.data;
-    const byteLength = hexString.length / 2;
-    const bytes = new Uint8Array(byteLength);
-
-    for (let i = 0; i < byteLength; i++) {
-        const hexPair = hexString.substr(i * 2, 2);
-        bytes[i] = parseInt(hexPair, 16);
-    }
-
-    return {
-        bytes: bytes
-    };
-}
-
-function decodeUplink(input) {
-    return {
-        data: Decode(input.fPort, input.bytes)
-    };
-}
-
-function createPayloadString(dataBytes) {
+function _create_payload_string(dataBytes) {
     var payloadString = '';
     for (var i = 0; i < dataBytes.length; i++) {
         if (dataBytes[i] >= 0x20 && dataBytes[i] <= 0x7E) {
@@ -29,7 +8,7 @@ function createPayloadString(dataBytes) {
     return payloadString
 }
 
-function createSegments(segments, decode) {
+function _datapoints_object(segments, decode) {
     segments.forEach((segment, index) => {
         if (index < 6) {
             decode["Moisture" + (index + 1)] = parseFloat(segment.trim());
@@ -110,7 +89,7 @@ function fport100(bytes) {
     return decode;
 }
 
-function periodicUplink(bytes) {
+function fportX(bytes) {
     var decode = {};
     var payloadString = "";
 
@@ -121,10 +100,10 @@ function periodicUplink(bytes) {
 
     dataBytes = bytes.slice(7);
 
-    payloadString = createPayloadString(dataBytes);
+    payloadString = _create_payload_string(dataBytes);
 
     var segments = payloadString.split(/(?=[\+\-])/);
-    return createSegments(segments, decode);
+    return _datapoints_object(segments, decode);
 }
 
 function Decode(fPort, bytes) {
@@ -135,6 +114,27 @@ function Decode(fPort, bytes) {
         return fport100(bytes);
     }
     else {
-        return periodicUplink(bytes);
+        return fportX(bytes);
     }
+}
+
+function decodeUplink(input) {
+    return {
+        data: Decode(input.fPort, input.bytes)
+    };
+}
+
+function encodeDownlink(input) {
+    const hexString = input.data;
+    const byteLength = hexString.length / 2;
+    const bytes = new Uint8Array(byteLength);
+
+    for (let i = 0; i < byteLength; i++) {
+        const hexPair = hexString.substr(i * 2, 2);
+        bytes[i] = parseInt(hexPair, 16);
+    }
+
+    return {
+        bytes: bytes
+    };
 }
