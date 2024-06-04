@@ -108,7 +108,7 @@ function periodicUplink(bytes) {
 
     payloadString = createPayloadString(dataBytes);
 
-    var segments = payloadString.split(/[\+\-]/);
+    var segments = payloadString.split(/(?=[\+\-])/);
     return createSegments(segments, decode);
 }
 
