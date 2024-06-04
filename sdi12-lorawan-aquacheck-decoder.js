@@ -2,9 +2,9 @@ class Decoder {
     constructor(fPort, bytes) {
         this.fPort = fPort;
         this.bytes = bytes;
-        this.sensorDataBytes;
-        this.sensorDataPoints;
-        this.dataObject;
+        this.sensorDataBytes = [];
+        this.sensorDataPoints = [];
+        this.dataObject = {};
         this.create_decoded_object();
     }
 
@@ -98,25 +98,25 @@ class Decoder {
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
         this.sensorDataBytes = this.bytes.slice(7);
-        this.sensorDataPoints = generate_sensor_data_points();
+        this.sensorDataPoints = this.generate_sensor_data_points();
         this._append_moisture_and_temperature_data();
     }
 
     create_decoded_object() {
         if (this.fPort == 5) {
-            fport5_object();
+            this.fport5_object();
         }
         else if (this.fPort == 100) {
-            fport100_object();
+            this.fport100_object();
         }
         else {
-            fportX_object();
+            this.fportX_object();
         }
     }
 }
 
 function decodeUplink(input) {
-    const decoder = Decoder(input.fport, input.bytes)
+    const decoder = new Decoder(input.fport, input.bytes)
     return {
         data: decoder.dataObject
     };
