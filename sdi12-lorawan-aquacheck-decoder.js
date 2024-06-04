@@ -8,7 +8,7 @@ class Decoder {
         this.create_decoded_object();
     }
 
-    _sensor_data_points() {
+    generate_sensor_data_points() {
         let sensorDataString;
         for (var i = 0; i < this.dataBytes.length; i++) {
             if (this.dataBytes[i] >= 0x20 && this.dataBytes[i] <= 0x7E) {
@@ -18,12 +18,12 @@ class Decoder {
         this.sensorDataPoints = sensorDataString.split(/(?=[\+\-])/);
     }
 
-    _append_moisture_and_temperature() {
-        this.segments.forEach((segment, index) => {
+    _append_moisture_and_temperature_data() {
+        this.sensorDataPoints.forEach((dataPoint, index) => {
             if (index < 6) {
-                this.dataObject["Moisture" + (index + 1)] = parseFloat(segment.trim());
+                this.dataObject["Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
             } else {
-                this.dataObject["Temperature" + (index - 5)] = parseFloat(segment.trim());
+                this.dataObject["Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
             }
         });
     }
@@ -98,8 +98,8 @@ class Decoder {
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
         this.sensorDataBytes = this.bytes.slice(7);
-        this.sensorDataPoints = _sensor_data_points();
-        this._append_moisture_and_temperature();
+        this.sensorDataPoints = generate_sensor_data_points();
+        this._append_moisture_and_temperature_data();
     }
 
     create_decoded_object() {
