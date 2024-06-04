@@ -2,28 +2,30 @@ class Decoder {
     constructor(fPort, bytes) {
         this.fPort = fPort;
         this.bytes = bytes;
-        this.data_object = this.decoded_object();
+        this.dataBytes = 0;
+        this.sensorDataPoints = '';
+        this.dataObject = {};
+        this.create_decoded_object();
     }
 
-    _create_payload_string(dataBytes) {
-        var payloadString = '';
-        for (var i = 0; i < dataBytes.length; i++) {
-            if (dataBytes[i] >= 0x20 && dataBytes[i] <= 0x7E) {
-                payloadString += String.fromCharCode(dataBytes[i]);
+    _sensor_data_points() {
+        let sensorDataString;
+        for (var i = 0; i < this.dataBytes.length; i++) {
+            if (this.dataBytes[i] >= 0x20 && this.dataBytes[i] <= 0x7E) {
+                sensorDataString += String.fromCharCode(this.dataBytes[i]);
             }
         }
-        return payloadString
+        this.sensorDataPoints = sensorDataString.split(/(?=[\+\-])/);
     }
 
-    _datapoints_object(segments, decode) {
-        segments.forEach((segment, index) => {
+    _append_moisture_and_temperature() {
+        this.segments.forEach((segment, index) => {
             if (index < 6) {
-                decode["Moisture" + (index + 1)] = parseFloat(segment.trim());
+                this.dataObject["Moisture" + (index + 1)] = parseFloat(segment.trim());
             } else {
-                decode["Temperature" + (index - 5)] = parseFloat(segment.trim());
+                this.dataObject["Temperature" + (index - 5)] = parseFloat(segment.trim());
             }
         });
-        return decode;
     }
 
     fport5_object() {
@@ -96,31 +98,24 @@ class Decoder {
     }
 
     fportX_object() {
-        var decode = {};
-        var payloadString = "";
-
-        decode.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
-        decode.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
-        decode.Payver = this.bytes[2];
-        decode.SensorAddress = String.fromCharCode(bytes[5]);
-
-        dataBytes = bytes.slice(7);
-
-        payloadString = _create_payload_string(dataBytes);
-
-        var segments = payloadString.split(/(?=[\+\-])/);
-        return _datapoints_object(segments, decode);
+        this.dataObject.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
+        this.dataObject.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
+        this.dataObject.Payver = this.bytes[2];
+        this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
+        this.dataBytes = this.bytes.slice(7);
+        this.sensorDataPoints = _sensor_data_points();
+        this._append_moisture_and_temperature();
     }
 
-    decoded_object() {
+    create_decoded_object() {
         if (this.fPort == 5) {
-            return fport5_object();
+            fport5_object();
         }
         else if (this.fPort == 100) {
-            return fport100_object();
+            fport100_object();
         }
         else {
-            return fportX_object();
+            fportX_object();
         }
     }
 }
@@ -128,7 +123,7 @@ class Decoder {
 function decodeUplink(input) {
     const decoder = Decoder(input.fport, input.bytes)
     return {
-        data: decoder.data_object
+        data: decoder.dataObject
     };
 }
 
