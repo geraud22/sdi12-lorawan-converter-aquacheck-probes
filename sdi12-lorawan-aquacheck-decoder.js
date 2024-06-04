@@ -1,3 +1,18 @@
+function encodeDownlink(input) {
+    const hexString = input.data;
+    const byteLength = hexString.length / 2;
+    const bytes = new Uint8Array(byteLength);
+
+    for (let i = 0; i < byteLength; i++) {
+        const hexPair = hexString.substr(i * 2, 2);
+        bytes[i] = parseInt(hexPair, 16);
+    }
+
+    return {
+        bytes: bytes
+    };
+}
+
 function decodeUplink(input) {
     return {
         data: Decode(input.fPort, input.bytes)
