@@ -2,9 +2,9 @@ class Decoder {
     constructor(fPort, bytes) {
         this.fPort = fPort;
         this.bytes = bytes;
-        this.dataBytes = 0;
-        this.sensorDataPoints = '';
-        this.dataObject = {};
+        this.sensorDataBytes;
+        this.sensorDataPoints;
+        this.dataObject;
         this.create_decoded_object();
     }
 
@@ -75,26 +75,21 @@ class Decoder {
 
         var bat = (this.bytes[5] << 8 | this.bytes[6]) / 1000;
 
-        return {
-            SENSOR_MODEL: sensor,
-            FIRMWARE_VERSION: firm_ver,
-            FREQUENCY_BAND: freq_band,
-            SUB_BAND: sub_band,
-            BAT: bat,
-        }
+        this.dataObject.SENSOR_MODEL = sensor;
+        this.dataObject.FIRMWARE_VERSION = firm_ver;
+        this.dataObject.FREQUENCY_BAND = freq_band;
+        this.dataObject.SUB_BAND = sub_band;
+        this.dataObject.BAT = bat;
     }
 
     fport100_object() {
-        var decode = {};
-        for (var j = 0; j < this.bytes.length; j++) {
-            var datas = String.fromCharCode(this.bytes[j]);
-            if (j == '0')
-                decode.datas_sum = datas;
+        for (var i = 0; j < this.bytes.length; i++) {
+            var datas = String.fromCharCode(this.bytes[i]);
+            if (i == '0')
+                this.dataObject.datasum = datas;
             else
-                decode.datas_sum += datas;
+                this.dataObject.datasum += datas;
         }
-
-        return decode;
     }
 
     fportX_object() {
@@ -102,7 +97,7 @@ class Decoder {
         this.dataObject.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
-        this.dataBytes = this.bytes.slice(7);
+        this.sensorDataBytes = this.bytes.slice(7);
         this.sensorDataPoints = _sensor_data_points();
         this._append_moisture_and_temperature();
     }
