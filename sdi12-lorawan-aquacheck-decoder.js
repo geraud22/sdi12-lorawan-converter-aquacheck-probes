@@ -4,6 +4,23 @@ class Decoder {
         this.sensorDataBytes = [];
         this.sensorDataPoints = [];
         this.dataObject = {};
+        this.frequencyBand = {
+            0x01: "EU868",
+            0x02: "US915",
+            0x03: "IN865",
+            0x04: "AU915",
+            0x05: "KZ865",
+            0x06: "RU864",
+            0x07: "AS923",
+            0x08: "AS923_1",
+            0x09: "AS923_2",
+            0x0A: "AS923_3",
+            0x0F: "AS923_4",
+            0x0B: "CN470",
+            0x0C: "EU433",
+            0x0D: "KR920",
+            0x0E: "MA869"
+        };
         if (fPort == 5) {
             this.fport5_object();
         }
@@ -16,49 +33,17 @@ class Decoder {
     }
 
     fport5_object() {
-        var freq_band;
-        var sub_band;
+        const firm_ver = (this.bytes[1] & 0x0f) + '.' + (this.bytes[2] >> 4 & 0x0f) + '.' + (this.bytes[2] & 0x0f);
+        const byteValue = this.bytes[3];
+        const freq_band = this.frequencyBand[byteValue] || "Unknown";
+        const bat = (this.bytes[5] << 8 | this.bytes[6]) / 1000;
         var sensor;
         if (this.bytes[0] == 0x17) sensor = "SDI12-LB";
-        var firm_ver = (this.bytes[1] & 0x0f) + '.' + (this.bytes[2] >> 4 & 0x0f) + '.' + (this.bytes[2] & 0x0f);
-
-        if (this.bytes[3] == 0x01)
-            freq_band = "EU868";
-        else if (this.bytes[3] == 0x02)
-            freq_band = "US915";
-        else if (this.bytes[3] == 0x03)
-            freq_band = "IN865";
-        else if (this.bytes[3] == 0x04)
-            freq_band = "AU915";
-        else if (this.bytes[3] == 0x05)
-            freq_band = "KZ865";
-        else if (this.bytes[3] == 0x06)
-            freq_band = "RU864";
-        else if (this.bytes[3] == 0x07)
-            freq_band = "AS923";
-        else if (this.bytes[3] == 0x08)
-            freq_band = "AS923_1";
-        else if (this.bytes[3] == 0x09)
-            freq_band = "AS923_2";
-        else if (this.bytes[3] == 0x0A)
-            freq_band = "AS923_3";
-        else if (this.bytes[3] == 0x0F)
-            freq_band = "AS923_4";
-        else if (this.bytes[3] == 0x0B)
-            freq_band = "CN470";
-        else if (this.bytes[3] == 0x0C)
-            freq_band = "EU433";
-        else if (this.bytes[3] == 0x0D)
-            freq_band = "KR920";
-        else if (this.bytes[3] == 0x0E)
-            freq_band = "MA869";
-
+        var sub_band;
         if (this.bytes[4] == 0xff)
             sub_band = "NULL";
         else
             sub_band = bytes[4];
-
-        var bat = (this.bytes[5] << 8 | this.bytes[6]) / 1000;
         this.dataObject.SENSOR_MODEL = sensor;
         this.dataObject.FIRMWARE_VERSION = firm_ver;
         this.dataObject.FREQUENCY_BAND = freq_band;
@@ -85,7 +70,7 @@ class Decoder {
         this.generate_sensor_data_points();
         this.append_moisture_and_temperature_data();
     }
-    
+
     generate_sensor_data_points() {
         let sensorDataString;
         for (var i = 0; i < this.sensorDataBytes.length; i++) {
