@@ -72,7 +72,7 @@ class Decoder {
     }
 
     generate_sensor_data_points() {
-        let sensorDataString;
+        let sensorDataString = "";
         for (var i = 0; i < this.sensorDataBytes.length; i++) {
             if (this.sensorDataBytes[i] >= 0x20 && this.sensorDataBytes[i] <= 0x7E) {
                 sensorDataString += String.fromCharCode(this.sensorDataBytes[i]);
