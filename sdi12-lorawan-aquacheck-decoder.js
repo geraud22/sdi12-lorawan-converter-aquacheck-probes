@@ -1,9 +1,10 @@
 class Decoder {
-    constructor(fPort, bytes) {
+    constructor(fPort, bytes, variables) {
         this.bytes = bytes;
         this.sensorDataBytes = [];
         this.sensorDataPoints = [];
         this.dataObject = {};
+        if (variables.dfid) this.dataObject.dfid = parseInt(variables.dfid);
         this.frequencyBand = {
             0x01: "EU868",
             0x02: "US915",
@@ -93,7 +94,7 @@ class Decoder {
 }
 
 function decodeUplink(input) {
-    const decoder = new Decoder(input.fport, input.bytes)
+    const decoder = new Decoder(input.fport, input.bytes, input.variables)
     return {
         data: decoder.dataObject
     };
