@@ -4,7 +4,7 @@ class Decoder {
         this.sensorDataBytes = [];
         this.sensorDataPoints = [];
         this.dataObject = {};
-        if (variables.dfid) this.dataObject.dfid = parseInt(variables.dfid);
+        if (variables.itid) this.dataObject.itid = parseInt(variables.itid);
         this.frequencyBand = {
             0x01: "EU868",
             0x02: "US915",
