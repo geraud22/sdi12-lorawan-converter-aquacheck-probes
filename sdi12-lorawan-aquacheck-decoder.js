@@ -1,10 +1,10 @@
 class Decoder {
     constructor(fPort, bytes, variables) {
         this.bytes = bytes;
-        this.sensorDataBytes = [];
-        this.sensorDataPoints = [];
+        this.probeDataBytes = [];
+        this.probeDataPoints = [];
+        this.ecDataBytes = [];
         this.dataObject = {};
-        this.endOfProbeData = 0;
         if (variables.itid) this.dataObject.itid = parseInt(variables.itid);
         this.frequencyBand = {
             0x01: "EU868",
@@ -64,39 +64,40 @@ class Decoder {
     }
 
     fportX_object() {
+        this.dataObject.ByteLength = this.bytes.length;
         this.dataObject.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
         this.dataObject.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
-        this.sensorDataBytes = this.bytes.slice(7);
+        this.probeDataBytes = this.bytes.slice(7, 131);
+        this.ecDataBytes = this.bytes.slice(132);
         this.generate_probe_data_points();
-        this.append_moisture_and_temperature_data();
         this.generate_ec_data_points();
+        this.append_moisture_and_temperature_data();
+    }
+
+    generate_probe_data_points() {
+        let sensorDataString = "";
+        for (var i = 0; i < this.probeDataBytes.length; i++) {
+            if (this.probeDataBytes[i] >= 0x20 && this.probeDataBytes[i] <= 0x7E) {
+                sensorDataString += String.fromCharCode(this.probeDataBytes[i]);
+            }
+        }
+        this.probeDataPoints = sensorDataString.split(/(?=[\+\-])/);
     }
 
     generate_ec_data_points() {
         let ec_sensorDataString = "";
-        for (var i = this.endOfProbeData; i < this.sensorDataBytes.length; i++) {
-            if (this.sensorDataBytes[i] >= 0x20 && this.sensorDataBytes[i] <= 0x7E) {
-                ec_sensorDataString += String.fromCharCode(this.sensorDataBytes[i]);
+        for (var i = 0; i < this.ecDataBytes.length; i++) {
+            if (this.ecDataBytes[i] >= 0x20 && this.ecDataBytes[i] <= 0x7E) {
+                ec_sensorDataString += String.fromCharCode(this.ecDataBytes[i]);
             }
         }
         this.dataObject.ECPayload = ec_sensorDataString;
     }
 
-    generate_probe_data_points() {
-        let sensorDataString = "";
-        for (var i = 0; i < this.sensorDataBytes.length; i++) {
-            if (this.sensorDataBytes[i] >= 0x20 && this.sensorDataBytes[i] <= 0x7E) {
-                sensorDataString += String.fromCharCode(this.sensorDataBytes[i]);
-            }
-            this.endOfProbeData = i + 1;
-        }
-        this.sensorDataPoints = sensorDataString.split(/(?=[\+\-])/);
-    }
-
     append_moisture_and_temperature_data() {
-        this.sensorDataPoints.forEach((dataPoint, index) => {
+        this.probeDataPoints.forEach((dataPoint, index) => {
             if (index < 6) {
                 this.dataObject["Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
             } else {
