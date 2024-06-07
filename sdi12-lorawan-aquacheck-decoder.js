@@ -69,8 +69,8 @@ class Decoder {
         this.dataObject.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
-        this.probeDataBytes = this.bytes.slice(7, 131);
-        this.ecDataBytes = this.bytes.slice(132);
+        this.probeDataBytes = this.bytes.slice(7, 130);
+        this.ecDataBytes = this.bytes.slice(131);
         this.generate_probe_data_points();
         this.generate_ec_data_points();
         this.append_moisture_and_temperature_data();
