@@ -72,7 +72,7 @@ class Decoder {
         this.generate_ascii_from_byte_array();
         this.split_sensor_data();
         this.append_probe_moisture_and_probe_temperature_data();
-        this.append_ec_moisture_and_ec_temperature_data();
+        this.append_ec_level_and_ec_temperature_data();
     }
 
     generate_ascii_from_byte_array() {
@@ -109,7 +109,7 @@ class Decoder {
         });
     }
 
-    append_ec_moisture_and_ec_temperature_data() {
+    append_ec_level_and_ec_temperature_data() {
         this.ecDataPoints.forEach((dataPoint, index) => {
             if (index < 2) {
                 this.dataObject["EC_Level" + (index + 1)] = parseFloat(dataPoint.trim());
