@@ -23,17 +23,17 @@ class Decoder {
             0x0E: "MA869"
         };
         if (fPort == 5) {
-            this.fport5_object();
+            this.fPort5_object();
         }
         else if (fPort == 100) {
-            this.fport100_object();
+            this.fPort100_object();
         }
         else {
-            this.fportX_object();
+            this.fPortX_object();
         }
     }
 
-    fport5_object() {
+    fPort5_object() {
         const firm_ver = (this.bytes[1] & 0x0f) + '.' + (this.bytes[2] >> 4 & 0x0f) + '.' + (this.bytes[2] & 0x0f);
         const byteValue = this.bytes[3];
         const freq_band = this.frequencyBand[byteValue] || "Unknown";
@@ -52,7 +52,7 @@ class Decoder {
         this.dataObject.BAT = bat;
     }
 
-    fport100_object() {
+    fPort100_object() {
         for (var i = 0; j < this.bytes.length; i++) {
             var datas = String.fromCharCode(this.bytes[i]);
             if (i == '0')
@@ -62,7 +62,7 @@ class Decoder {
         }
     }
 
-    fportX_object() {
+    fPortX_object() {
         this.dataObject.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
         this.dataObject.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
         this.dataObject.Payver = this.bytes[2];
@@ -94,7 +94,7 @@ class Decoder {
 }
 
 function decodeUplink(input) {
-    const decoder = new Decoder(input.fport, input.bytes, input.variables)
+    const decoder = new Decoder(input.fPort, input.bytes, input.variables)
     return {
         data: decoder.dataObject
     };
