@@ -86,12 +86,6 @@ class Decoder {
 
     split_sensor_data() {
         let delimiterIndex = this.uplinkString.indexOf(this.payloadSplitDelimiter);
-        if (delimiterIndex === -1) {
-            this.dataObject.uplinkString = this.uplinkString;
-            this.probeDataBytes = null;
-            this.ecDataBytes = null;
-            return
-        }
         let delimiterLength = this.payloadSplitDelimiter.length;
         let probeDataString = this.uplinkString.slice(0, delimiterIndex);
         let ecDataString = this.uplinkString.slice(delimiterIndex + delimiterLength);
