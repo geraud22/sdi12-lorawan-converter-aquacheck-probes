@@ -70,7 +70,10 @@ class Decoder {
         this.dataObject.Payver = this.bytes[2];
         this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
         this.generate_ascii_from_byte_array();
-        this.split_sensor_data();
+        if (this.split_sensor_data() == false) {
+            this.append_probe_moisture_and_probe_temperature_data();
+            return
+        }
         this.append_probe_moisture_and_probe_temperature_data();
         this.append_ec_level_and_ec_temperature_data();
     }
@@ -82,22 +85,31 @@ class Decoder {
             }
         }
         this.uplinkString.trim();
+        this.dataObject.uplinkString = this.uplinkString;
     }
 
     split_sensor_data() {
         let delimiterIndex = this.uplinkString.indexOf(this.payloadSplitDelimiter);
+        if (delimiterIndex === -1) {
+            this.probeDataPoints = this.uplinkString.split(/(?=[\+\-])/);
+            return false;
+        }
         let delimiterLength = this.payloadSplitDelimiter.length;
         let probeDataString = this.uplinkString.slice(0, delimiterIndex);
         let ecDataString = this.uplinkString.slice(delimiterIndex + delimiterLength);
         this.probeDataPoints = probeDataString.split(/(?=[\+\-])/);
         this.ecDataPoints = ecDataString.split(/(?=[\+\-])/);
+
+        this.dataObject.probeString = probeDataString;
+        this.dataObject.ecString = ecDataString;
+        return true;
     }
 
     append_probe_moisture_and_probe_temperature_data() {
         this.probeDataPoints.forEach((dataPoint, index) => {
             if (index < 6) {
                 this.dataObject["Probe_Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
-            } else {
+            } else if (index > 6 && index < 12) {
                 this.dataObject["Probe_Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
             }
         });
