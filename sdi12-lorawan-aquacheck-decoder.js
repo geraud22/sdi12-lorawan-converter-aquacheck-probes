@@ -85,9 +85,9 @@ class Decoder {
     append_moisture_and_temperature_data() {
         this.sensorDataPoints.forEach((dataPoint, index) => {
             if (index < 6) {
-                this.dataObject["Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
+                this.dataObject["Probe_Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
             } else {
-                this.dataObject["Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
+                this.dataObject["Probe_Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
             }
         });
     }
