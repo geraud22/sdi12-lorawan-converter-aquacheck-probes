@@ -55,7 +55,7 @@ class Decoder {
     }
 
     fPort100_object() {
-        for (var i = 0; j < this.bytes.length; i++) {
+        for (var i = 0; i < this.bytes.length; i++) {
             var datas = String.fromCharCode(this.bytes[i]);
             if (i == '0')
                 this.dataObject.datasum = datas;
