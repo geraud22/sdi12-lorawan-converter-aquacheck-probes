@@ -1,12 +1,12 @@
 class Decoder {
     constructor(fPort, bytes, variables) {
         this.bytes = bytes;
-        this.uplinkString = "";
         this.payloadSplitDelimiter = "016211+";
+        this.uplinkString = "";
         this.probeDataPoints = [];
         this.ecDataPoints = [];
         this.dataObject = {};
-        if (variables.itid) this.dataObject.itid = parseInt(variables.itid);
+        this.dataObject.itid = variables.itid || null;
         this.frequencyBand = {
             0x01: "EU868",
             0x02: "US915",
@@ -85,7 +85,6 @@ class Decoder {
             }
         }
         this.uplinkString.trim();
-        this.dataObject.uplinkString = this.uplinkString;
     }
 
     split_sensor_data() {
@@ -99,9 +98,6 @@ class Decoder {
         let ecDataString = this.uplinkString.slice(delimiterIndex + delimiterLength);
         this.probeDataPoints = probeDataString.split(/(?=[\+\-])/);
         this.ecDataPoints = ecDataString.split(/(?=[\+\-])/);
-
-        this.dataObject.probeString = probeDataString;
-        this.dataObject.ecString = ecDataString;
         return true;
     }
 
