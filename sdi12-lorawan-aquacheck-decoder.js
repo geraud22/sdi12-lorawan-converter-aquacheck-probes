@@ -1,13 +1,13 @@
 class Decoder {
     constructor(fPort, bytes, variables) {
         this.bytes = bytes;
-        this.payloadSplitDelimiter = "016211+";
-        this.uplinkString = "";
-        this.probeDataPoints = [];
-        this.ecDataPoints = [];
-        this.dataObject = {};
-        this.dataObject.itid = variables.itid || null;
-        this.frequencyBand = {
+        this.payload_split_delimiter = "016211+";
+        this.ascii_string = "";
+        this.probe_data_points = [];
+        this.ec_data_points = [];
+        this.data_object = {};
+        this.data_object.itid = variables.itid || null;
+        this.frequency_band = {
             0x01: "EU868",
             0x02: "US915",
             0x03: "IN865",
@@ -25,20 +25,20 @@ class Decoder {
             0x0E: "MA869"
         };
         if (fPort == 5) {
-            this.fPort5_object();
+            this.fPort5();
         }
         else if (fPort == 100) {
-            this.fPort100_object();
+            this.fPort100();
         }
         else {
-            this.fPortX_object();
+            this.fPortX();
         }
     }
 
-    fPort5_object() {
+    fPort5() {
         const firm_ver = (this.bytes[1] & 0x0f) + '.' + (this.bytes[2] >> 4 & 0x0f) + '.' + (this.bytes[2] & 0x0f);
-        const byteValue = this.bytes[3];
-        const freq_band = this.frequencyBand[byteValue] || "Unknown";
+        const byte_value = this.bytes[3];
+        const freq_band = this.frequency_band[byte_value] || "Unknown";
         const bat = (this.bytes[5] << 8 | this.bytes[6]) / 1000;
         var sensor;
         if (this.bytes[0] == 0x17) sensor = "SDI12-LB";
@@ -47,76 +47,76 @@ class Decoder {
             sub_band = "NULL";
         else
             sub_band = bytes[4];
-        this.dataObject.SENSOR_MODEL = sensor;
-        this.dataObject.FIRMWARE_VERSION = firm_ver;
-        this.dataObject.FREQUENCY_BAND = freq_band;
-        this.dataObject.SUB_BAND = sub_band;
-        this.dataObject.BAT = bat;
+        this.data_object.SENSOR_MODEL = sensor;
+        this.data_object.FIRMWARE_VERSION = firm_ver;
+        this.data_object.FREQUENCY_BAND = freq_band;
+        this.data_object.SUB_BAND = sub_band;
+        this.data_object.BAT = bat;
     }
 
-    fPort100_object() {
+    fPort100() {
         for (var i = 0; i < this.bytes.length; i++) {
             var datas = String.fromCharCode(this.bytes[i]);
             if (i == '0')
-                this.dataObject.datasum = datas;
+                this.data_object.datasum = datas;
             else
-                this.dataObject.datasum += datas;
+                this.data_object.datasum += datas;
         }
     }
 
-    fPortX_object() {
-        this.dataObject.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
-        this.dataObject.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
-        this.dataObject.Payver = this.bytes[2];
-        this.dataObject.SensorAddress = String.fromCharCode(this.bytes[5]);
-        this.generate_ascii_from_byte_array();
-        if (this.split_sensor_data() == false) {
-            this.append_probe_moisture_and_probe_temperature_data();
+    fPortX() {
+        this.data_object.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
+        this.data_object.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
+        this.data_object.Payver = this.bytes[2];
+        this.data_object.SensorAddress = String.fromCharCode(this.bytes[5]);
+        this.byteArray2ASCII();
+        if (this.splitSensorData() == false) {
+            this.appendMoistureProbeData();
             return
         }
-        this.append_probe_moisture_and_probe_temperature_data();
-        this.append_ec_level_and_ec_temperature_data();
+        this.appendMoistureProbeData();
+        this.appendECProbeData();
     }
 
-    generate_ascii_from_byte_array() {
-        for (var i = 7; i < this.bytes.length; i++) { // Bytes < 7 is Logger Health related.
+    byteArray2ASCII() {
+        for (var i = 7; i < this.bytes.length; i++) {
             if (this.bytes[i] >= 0x20 && this.bytes[i] <= 0x7E) {
-                this.uplinkString += String.fromCharCode(this.bytes[i]);
+                this.ascii_string += String.fromCharCode(this.bytes[i]);
             }
         }
-        this.uplinkString.trim();
+        this.ascii_string.trim();
     }
 
-    split_sensor_data() {
-        let delimiterIndex = this.uplinkString.indexOf(this.payloadSplitDelimiter);
-        if (delimiterIndex === -1) {
-            this.probeDataPoints = this.uplinkString.split(/(?=[\+\-])/);
+    splitSensorData() {
+        let delimiter_index = this.ascii_string.indexOf(this.payload_split_delimiter);
+        if (delimiter_index === -1) {
+            this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
             return false;
         }
-        let delimiterLength = this.payloadSplitDelimiter.length;
-        let probeDataString = this.uplinkString.slice(0, delimiterIndex);
-        let ecDataString = this.uplinkString.slice(delimiterIndex + delimiterLength);
-        this.probeDataPoints = probeDataString.split(/(?=[\+\-])/);
-        this.ecDataPoints = ecDataString.split(/(?=[\+\-])/);
+        let delimiter_length = this.payload_split_delimiter.length;
+        let probe_data_string = this.ascii_string.slice(0, delimiter_index);
+        let ec_data_string = this.ascii_string.slice(delimiter_index + delimiter_length);
+        this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
+        this.ec_data_points = ec_data_string.split(/(?=[\+\-])/);
         return true;
     }
 
-    append_probe_moisture_and_probe_temperature_data() {
-        this.probeDataPoints.forEach((dataPoint, index) => {
+    appendMoistureProbeData() {
+        this.probe_data_points.forEach((dataPoint, index) => {
             if (index < 6) {
-                this.dataObject["Probe_Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
+                this.data_object["Probe_Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
             } else if (index > 6 && index < 12) {
-                this.dataObject["Probe_Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
+                this.data_object["Probe_Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
             }
         });
     }
 
-    append_ec_level_and_ec_temperature_data() {
-        this.ecDataPoints.forEach((dataPoint, index) => {
+    appendECProbeData() {
+        this.ec_data_points.forEach((dataPoint, index) => {
             if (index < 2) {
-                this.dataObject["EC_Level" + (index + 1)] = parseFloat(dataPoint.trim());
+                this.data_object["EC_Level" + (index + 1)] = parseFloat(dataPoint.trim());
             } else {
-                this.dataObject["EC_Temperature" + (index - 1)] = parseFloat(dataPoint.trim());
+                this.data_object["EC_Temperature" + (index - 1)] = parseFloat(dataPoint.trim());
             }
         });
     }
@@ -125,7 +125,7 @@ class Decoder {
 function decodeUplink(input) {
     const decoder = new Decoder(input.fPort, input.bytes, input.variables)
     return {
-        data: decoder.dataObject
+        data: decoder.data_object
     };
 }
 
