@@ -103,7 +103,7 @@ class Decoder {
 
     appendMoistureProbeData() {
         this.probe_data_points.forEach((dataPoint, index) => {
-            value = parseFloat(dataPoint.trim())
+            let value = parseFloat(dataPoint.trim())
             if (index < 6) {
                 if (value < 110.0)
                     this.data_object["Probe_Moisture" + (index + 1)] = value;
@@ -116,7 +116,7 @@ class Decoder {
 
     appendECProbeData() {
         this.ec_data_points.forEach((dataPoint, index) => {
-            value = parseFloat(dataPoint.trim())
+            let value = parseFloat(dataPoint.trim())
             if (index < 2) {
                 if (value < 5.0)
                     this.data_object["EC_Level" + (index + 1)] = value;
