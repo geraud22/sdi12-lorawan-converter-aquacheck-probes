@@ -103,20 +103,26 @@ class Decoder {
 
     appendMoistureProbeData() {
         this.probe_data_points.forEach((dataPoint, index) => {
+            value = parseFloat(dataPoint.trim())
             if (index < 6) {
-                this.data_object["Probe_Moisture" + (index + 1)] = parseFloat(dataPoint.trim());
-            } else if (index > 6 && index < 12) {
-                this.data_object["Probe_Temperature" + (index - 5)] = parseFloat(dataPoint.trim());
+                if (value < 110.0)
+                    this.data_object["Probe_Moisture" + (index + 1)] = value;
+            } else if (index >= 6 && index < 12) {
+                if (value < 60.0)
+                    this.data_object["Probe_Temperature" + (index - 5)] = value;
             }
         });
     }
 
     appendECProbeData() {
         this.ec_data_points.forEach((dataPoint, index) => {
+            value = parseFloat(dataPoint.trim())
             if (index < 2) {
-                this.data_object["EC_Level" + (index + 1)] = parseFloat(dataPoint.trim());
-            } else {
-                this.data_object["EC_Temperature" + (index - 1)] = parseFloat(dataPoint.trim());
+                if (value < 5.0)
+                    this.data_object["EC_Level" + (index + 1)] = value;
+            } else if (index >= 2 && index < 4) {
+                if (value < 60.0)
+                    this.data_object["EC_Temperature" + (index - 1)] = value;
             }
         });
     }
