@@ -6,7 +6,7 @@ class Decoder {
         this.probe_data_points = [];
         this.ec_data_points = [];
         this.data_object = {};
-        this.data_object.itid = variables.itid || null;
+        this.data_object.itid = parseInt(variables.itid) || null;
         this.frequency_band = {
             0x01: "EU868",
             0x02: "US915",
