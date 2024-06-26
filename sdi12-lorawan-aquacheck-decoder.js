@@ -6,7 +6,7 @@ class Decoder {
         this.probe_data_points = [];
         this.ec_data_points = [];
         this.data_object = {};
-        this.data_object.itid = parseInt(variables.itid) || null;
+        this.data_object.devEUI = variables.devEUI || null;
         this.frequency_band = {
             0x01: "EU868",
             0x02: "US915",
@@ -67,8 +67,6 @@ class Decoder {
     fPortX() {
         this.data_object.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
         this.data_object.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
-        this.data_object.Payver = this.bytes[2];
-        this.data_object.SensorAddress = String.fromCharCode(this.bytes[5]);
         this.byteArray2ASCII();
         if (this.splitSensorData() == false) {
             this.appendMoistureProbeData();
