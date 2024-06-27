@@ -2,6 +2,7 @@ class Decoder {
     constructor(fPort, bytes, variables) {
         this.bytes = bytes;
         this.ascii_string = "";
+        this.split_marker = "1+";
         this.probe_data_points = [];
         this.ec_data_points = [];
         this.data_object = {};
@@ -87,27 +88,26 @@ class Decoder {
             this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
             return 0
         }
-        let probe_data_string = this.ascii_string(0, valid_split_index);
-        let ec_data_string = this.ascii_string(split_marker_index + split_marker.length)
+        let probe_data_string = this.ascii_string.substring(0, valid_split_index);
+        let ec_data_string = this.ascii_string.substring(valid_split_index + 2)
         this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
         this.ec_data_points = ec_data_string.split(/(?=[\+\-])/);
         return 1
     }
 
     findValidSplitIndex() {
-        const split_marker = "1+";
-        let split_marker_index = this.ascii_string.indexOf(split_marker);
+        let split_marker_index = this.ascii_string.indexOf(this.split_marker);
         while (split_marker_index !== -1) {
             const probe_data_candidate = this.ascii_string.substring(0, split_marker_index);
-            const ec_data_candidate = this.ascii_string.substring(split_marker_index + split_marker.length)
+            const ec_data_candidate = this.ascii_string.substring(split_marker_index + this.split_marker.length)
             const plus_count_in_probe_data = (probe_data_candidate.match(/\+/g) || []).length;
             const plus_count_in_ec_data = (ec_data_candidate.match(/\+/g) || []).length;
-            if (plus_count_in_probe_data === 12 && plus_count_in_ec_data === 3) {
-                return split_marker_index
+            if (plus_count_in_probe_data === 11 && plus_count_in_ec_data === 3) {
+                return split_marker_index;
             }
-            split_marker_index = this.ascii_string.indexOf(split_marker, split_marker_index + 1);
+            split_marker_index = this.ascii_string.indexOf(this.split_marker, split_marker_index + 1);
         }
-        return split_marker_index
+        return -1
     }
 
     appendMoistureProbeData() {
