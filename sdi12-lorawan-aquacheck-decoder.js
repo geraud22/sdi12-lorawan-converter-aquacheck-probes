@@ -86,12 +86,12 @@ class Decoder {
 
     splitSensorData() {
         const ec_address_index_from_end = 26;
-        const payload_split_index = payload.length - ec_address_index_from_end;
+        const payload_split_index = this.ascii_string.length - ec_address_index_from_end;
         if (this.ascii_string[payload_split_index] != '1') {
             this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
             return false;
         }
-        if (this.ascii_string[payload_split_index] != '1' && this.ascii_string[payload_split_index + 1] === '+') {
+        if (this.ascii_string[payload_split_index] === '1' && this.ascii_string[payload_split_index + 1] === '+') {
             let probe_data_string = this.ascii_string.substring(0, payload_split_index);
             let ec_data_string = this.ascii_string.substring(payload_split_index + 2)
             this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
