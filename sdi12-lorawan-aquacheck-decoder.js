@@ -67,10 +67,7 @@ class Decoder {
         this.data_object.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
         this.data_object.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
         this.byteArray2ASCII();
-        if (this.splitSensorData() == false) {
-            this.appendMoistureProbeData();
-            return
-        }
+        this.splitSensorData();
         this.appendMoistureProbeData();
         this.appendECProbeData();
     }
@@ -85,33 +82,32 @@ class Decoder {
     }
 
     splitSensorData() {
+        let valid_split_index = this.findValidSplitIndex();
+        if (valid_split_index === -1) {
+            this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
+            return 0
+        }
+        let probe_data_string = this.ascii_string(0, valid_split_index);
+        let ec_data_string = this.ascii_string(split_marker_index + split_marker.length)
+        this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
+        this.ec_data_points = ec_data_string.split(/(?=[\+\-])/);
+        return 1
+    }
+
+    findValidSplitIndex() {
         const split_marker = "1+";
         let split_marker_index = this.ascii_string.indexOf(split_marker);
-        let valid_split_index = -1;
         while (split_marker_index !== -1) {
             const probe_data_candidate = this.ascii_string.substring(0, split_marker_index);
             const ec_data_candidate = this.ascii_string.substring(split_marker_index + split_marker.length)
             const plus_count_in_probe_data = (probe_data_candidate.match(/\+/g) || []).length;
             const plus_count_in_ec_data = (ec_data_candidate.match(/\+/g) || []).length;
             if (plus_count_in_probe_data === 12 && plus_count_in_ec_data === 3) {
-                valid_split_index = split_marker_index
-                break
+                return split_marker_index
             }
             split_marker_index = this.ascii_string.indexOf(split_marker, split_marker_index + 1);
         }
-        // const payload_split_index = this.ascii_string.length - ec_address_index_from_end;
-        // if (this.ascii_string[payload_split_index] != '1') {
-        //     this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
-        //     return false;
-        // }
-        // if (this.ascii_string[payload_split_index] === '1' && this.ascii_string[payload_split_index + 1] === '+') {
-        //     let probe_data_string = this.ascii_string.substring(0, payload_split_index);
-        //     let ec_data_string = this.ascii_string.substring(payload_split_index + 2)
-        //     this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
-        //     this.ec_data_points = ec_data_string.split(/(?=[\+\-])/);
-        //     return true
-        // }
-        // return false
+        return split_marker_index
     }
 
     appendMoistureProbeData() {
@@ -128,6 +124,9 @@ class Decoder {
     }
 
     appendECProbeData() {
+        if (this.ec_data_points.length <= 0) {
+            return null
+        }
         this.ec_data_points.forEach((dataPoint, index) => {
             let value = parseFloat(dataPoint.trim())
             if (index < 2) {
