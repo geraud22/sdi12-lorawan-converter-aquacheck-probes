@@ -83,7 +83,7 @@ class Decoder {
     }
 
     splitSensorData() {
-        let valid_split_index = this.findValidSplitIndex();
+        let valid_split_index = this.findPayloadSplitIndex();
         if (valid_split_index === -1) {
             this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
             return 0
@@ -95,7 +95,7 @@ class Decoder {
         return 1
     }
 
-    findValidSplitIndex() {
+    findPayloadSplitIndex() {
         let split_marker_index = this.ascii_string.indexOf(this.split_marker);
         while (split_marker_index !== -1) {
             const probe_data_candidate = this.ascii_string.substring(0, split_marker_index);
