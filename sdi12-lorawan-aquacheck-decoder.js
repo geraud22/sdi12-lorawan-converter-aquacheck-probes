@@ -1,7 +1,6 @@
 class Decoder {
     constructor(fPort, bytes, variables) {
         this.bytes = bytes;
-        this.payload_split_delimiter = "016211+";
         this.ascii_string = "";
         this.probe_data_points = [];
         this.ec_data_points = [];
@@ -86,17 +85,20 @@ class Decoder {
     }
 
     splitSensorData() {
-        let delimiter_index = this.ascii_string.indexOf(this.payload_split_delimiter);
-        if (delimiter_index === -1) {
+        const ec_address_index_from_end = 26;
+        const payload_split_index = payload.length - ec_address_index_from_end;
+        if (this.ascii_string[payload_split_index] != '1') {
             this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
             return false;
         }
-        let delimiter_length = this.payload_split_delimiter.length;
-        let probe_data_string = this.ascii_string.slice(0, delimiter_index);
-        let ec_data_string = this.ascii_string.slice(delimiter_index + delimiter_length);
-        this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
-        this.ec_data_points = ec_data_string.split(/(?=[\+\-])/);
-        return true;
+        if (this.ascii_string[payload_split_index] != '1' && this.ascii_string[payload_split_index + 1] === '+') {
+            let probe_data_string = this.ascii_string.substring(0, payload_split_index);
+            let ec_data_string = this.ascii_string.substring(payload_split_index + 2)
+            this.probe_data_points = probe_data_string.split(/(?=[\+\-])/);
+            this.ec_data_points = ec_data_string.split(/(?=[\+\-])/);
+            return true
+        }
+        return false
     }
 
     appendMoistureProbeData() {
