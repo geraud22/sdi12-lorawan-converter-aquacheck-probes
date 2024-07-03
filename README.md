@@ -1,0 +1,1 @@
+Chirpstack V4 Decoder for Hex Payload received from SDI-12 LoRaWAN data loggers. Configured to decode payloads with Aquacheck Soil Moisture Probes as a primary connection. Able to decode payloads where the Logger reads from an EC Probe, as a secondary connection.
