@@ -62,18 +62,18 @@ class Decoder {
 		this.data_object.EXTI_Trigger = (this.bytes[0] & 0x80) ? "TRUE" : "FALSE";
 		this.data_object.BatV = ((this.bytes[0] << 8 | this.bytes[1]) & 0x7FFF) / 1000;
 		switch (this.bytes[4]) {
-			case '0x00':
+			case 0x00:
 				this.byteArray2ASCII()
-				this.ascii_string = this.ascii_string.slice(0, -1)
 				this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
 				this.appendMoistureProbeData("Probe_Moisture", 110)
 				break;
-			case '0x01':
+			case 0x01:
 				this.byteArray2ASCII()
+				this.ascii_string = this.ascii_string.slice(0, -1)
 				this.probe_data_points = this.ascii_string.split(/(?=[\+\-])/);
 				this.appendMoistureProbeData("Probe_Temperature", 70)
 				break;
-			case '0x02':
+			case 0x02:
 				this.byteArray2ASCII()
 				this.ec_data_points = this.ascii_string.split(/(?=[\+\-])/);
 				this.appendECProbeData();
@@ -91,6 +91,9 @@ class Decoder {
 			}
 		}
 		this.ascii_string = this.ascii_string.replace(/[^\x20-\x7E]/g, '');
+		if (this.ascii_string.startsWith('+')) {
+			this.ascii_string = this.ascii_string.slice(1)
+		}
 		this.ascii_string.trim();
 	}
 
